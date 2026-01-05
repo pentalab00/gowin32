@@ -227,7 +227,7 @@ func (wts *WTSServer) QuerySessionClientAddress(sessionID uint) (net.IP, error) 
 	var bytesReturned uint32
 
 	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), wrappers.WTSClientAddress, &buffer, &bytesReturned); err != nil {
-		return net.IP{}, err
+		return net.IP{}, fmt.Errorf("[WTSQuerySessionInformation]:%s", err.Error())
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
 
