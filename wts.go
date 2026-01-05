@@ -74,7 +74,7 @@ type WTSClientInfo struct {
 	DeviceID            string
 }
 
-func (ci *WTSClientInfo) ClientAddressToIP() (net.IP, error) {
+func (ci *WTSClientInfo) ClientAddressToIP() (net.IP, []byte, error) {
 	var buf [16]byte
 	if ci.ClientAddressFamily == wrappers.AF_INET {
 		for i := 0; i < 4; i++ {
@@ -222,12 +222,12 @@ func (wts *WTSServer) QuerySessionClientHardwareId(sessionID uint) (uint32, erro
 	return wts.querySessionInformationAsUint32(sessionID, wrappers.WTSClientHardwareId)
 }
 
-func (wts *WTSServer) QuerySessionClientAddress(sessionID uint) (net.IP, error) {
+func (wts *WTSServer) QuerySessionClientAddress(sessionID uint) (net.IP, []byte, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
 	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), wrappers.WTSClientAddress, &buffer, &bytesReturned); err != nil {
-		return net.IP{}, fmt.Errorf("[WTSQuerySessionInformation]:%s", err.Error())
+		return net.IP{}, []byte{}, fmt.Errorf("[WTSQuerySessionInformation]:%s", err.Error())
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
 
@@ -406,20 +406,20 @@ func buferSizeError(excpected, returned uint32) error {
 	return fmt.Errorf("Invalid buffer size. Expected: %d returned: %d", excpected, returned)
 }
 
-func clientAddressToIP(addressFamily uint32, address []byte) (net.IP, error) {
+func clientAddressToIP(addressFamily uint32, address []byte) (net.IP, []byte, error) {
 	switch addressFamily {
 	case wrappers.AF_INET, 4:
 		if len(address) >= 4 {
-			return net.IPv4(address[0], address[1], address[2], address[3]), nil
+			return net.IPv4(address[0], address[1], address[2], address[3]), address[0:4], nil
 		}
-		return nil, fmt.Errorf("Unknown1 addressFamily: %v", addressFamily)
+		return nil, []byte{}, fmt.Errorf("Unknown1 addressFamily: %v", addressFamily)
 	case wrappers.AF_INET6:
 		if len(address) >= 16 {
-			return net.IP(address[:16]), nil
+			return net.IP(address[:16]), address[:16], nil
 		}
-		return nil, fmt.Errorf("Unknown2 addressFamily: %v", addressFamily)
+		return nil, []byte{}, fmt.Errorf("Unknown2 addressFamily: %v", addressFamily)
 	}
-	return nil, fmt.Errorf("Unknown0 addressFamily: %v", addressFamily)
+	return nil, []byte{}, fmt.Errorf("Unknown0 addressFamily: %v", addressFamily)
 }
 
 func windowsFileTimeToTime(fileTime int64) time.Time {
