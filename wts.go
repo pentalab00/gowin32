@@ -410,12 +410,12 @@ func clientAddressToIP(addressFamily uint32, address []byte) (net.IP, []byte, er
 	switch addressFamily {
 	case wrappers.AF_INET, 4:
 		if len(address) >= 4 {
-			return net.IPv4(address[0], address[1], address[2], address[3]), address[0:4], nil
+			return net.IPv4(address[0], address[1], address[2], address[3]), address[:], nil
 		}
 		return nil, []byte{}, fmt.Errorf("Unknown1 addressFamily: %v", addressFamily)
 	case wrappers.AF_INET6:
 		if len(address) >= 16 {
-			return net.IP(address[:16]), address[:16], nil
+			return net.IP(address[:16]), address[:], nil
 		}
 		return nil, []byte{}, fmt.Errorf("Unknown2 addressFamily: %v", addressFamily)
 	}
