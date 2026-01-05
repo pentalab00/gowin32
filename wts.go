@@ -408,7 +408,7 @@ func buferSizeError(excpected, returned uint32) error {
 
 func clientAddressToIP(addressFamily uint32, address []byte) (net.IP, error) {
 	switch addressFamily {
-	case wrappers.AF_INET:
+	case wrappers.AF_INET, 4:
 		if len(address) >= 4 {
 			return net.IPv4(address[0], address[1], address[2], address[3]), nil
 		}
